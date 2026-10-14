@@ -1,0 +1,297 @@
+---
+title: "sandwichrand: Allocation Sequences by Sandwich Mixed Randomization"
+author: "Bingshun Wang"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{sandwichrand: Allocation Sequences by Sandwich Mixed Randomization}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(sandwichrand)
+```
+
+# Motivation
+
+Randomization is the cornerstone of the randomized controlled trial (RCT).
+A randomization procedure must satisfy two competing objectives
+simultaneously: it must produce comparable treatment groups (allocation
+**balance**), and it must prevent anyone from guessing the next allocation
+(allocation **unpredictability**). The permuted block design (PBD), still the
+dominant procedure in practice, achieves near-perfect balance at the price of
+predictability: once an investigator infers the block structure, the final
+assignment inside a block becomes foreseeable.
+
+The **Sandwich Mixed Randomization** (SMR) scheme of Wang et al. (2026) resolves
+this tension. An SMR sequence is a "sandwich":
+
+```
+|<--- n1 --->|<-------- N - 2*n1 -------->|<--- n1 --->|
++------------+----------------------------+------------+
+| block 1    | blocks 2 .. K              | block K+1  |
+| imbalanced | permuted blocks of         | complement |
+|            | varying sizes              | of block 1 |
++------------+----------------------------+------------+
+```
+
+The two end blocks are deliberately and controllably imbalanced, so that the
+first part of the sequence remains unpredictable; the middle part uses permuted
+blocks with varying block sizes; and the last block is the exact complement of
+the first, so that overall balance is guaranteed by construction. The
+`sandwichrand` package is an efficient, reproducible R implementation of this
+scheme.
+
+# Methods
+
+## Module I: the two complementary unbalanced blocks
+
+The head and tail blocks both have size `n1`. The size `n1` is a multiple of
+`ratio_sum` (the sum of the allocation-ratio units, e.g. 2 for 1:1, 5 for
+2:2:1) and is sampled uniformly at random from the admissible values in
+`[2*ratio_sum, N/2]`, keeping at most 10 candidate values. This means the block
+structure is not fixed in advance and cannot be predicted.
+
+A pool of `2*n1` slots is built in exact proportion to the target allocation and
+shuffled by Fisher--Yates. The first `n1` slots form the head block and the
+remaining `n1` slots form the tail block, so the two are complementary and their
+union is exactly proportional. The shuffle is repeated (replacement
+randomization) until the head block's imbalance is acceptable.
+
+The imbalance is measured by the **spread** of the deviations from the target
+allocation,
+
+```
+spread = max_g( count_g - n * mult_g / ratio_sum )
+       - min_g( count_g - n * mult_g / ratio_sum ).
+```
+
+For a 1:1 allocation this is exactly the difference between the two group
+sizes, i.e. the definition used in the paper; for unequal ratios it is the
+natural generalization (`spread = 0` means exactly proportional). The default
+admissible window is `[1, 4]`; 4 is the "safety factor" discussed in the paper.
+The head block must be *strictly* imbalanced (`spread >= 1`), otherwise the
+scheme would degenerate into a plain permuted-block design.
+
+## Module II: permuted blocks with varying block sizes
+
+The middle section holds `N - 2*n1` slots, split into blocks whose sizes are
+drawn at random from `2*ratio_sum`, `3*ratio_sum` and `4*ratio_sum` (the
+"doubled, tripled or quadrupled" sizes of the paper). At every step only
+feasible sizes are drawn, so no "crumb" block is created. Each block is filled
+in exact proportion to the target allocation (largest-remainder apportionment)
+and then shuffled.
+
+## Boundary paths
+
+* **Path 1** — `N < 4*ratio_sum`: the trial is too small for a sandwich, so a
+  single block of size `N` is produced by complete randomization.
+* **Path 3** — `N == 2*n1`: head and tail blocks only, no middle section.
+
+# Implementation
+
+`sandwichrand` is a pure R package (no compiled code) depending only on base R and
+the `parallel`, `stats`, `graphics` and `utils` packages.
+
+```{r}
+library(sandwichrand)
+```
+
+The public interface is small and orthogonal:
+
+| Function           | Purpose                                                        |
+|--------------------|----------------------------------------------------------------|
+| `smr_alloc()`      | Generate one allocation sequence.                              |
+| `smr_streams()`    | Derive independent random streams for high-frequency calling.  |
+| `smr_reproduce()`  | Regenerate a sequence from its stored specification.           |
+| `smr_verify()`     | Re-check every structural invariant.                           |
+| `smr_balance()`    | Arm counts and deviations from target.                         |
+| `smr_blocks()`     | Block structure (the statistician's copy).                     |
+| `smr_imbalance()`  | Running imbalance along the sequence.                          |
+| `smr_spread()`     | Spread of deviations (the imbalance measure).                  |
+| `smr_simulate()`   | Assess a design by replication.                                |
+| `smr_rtf()`        | Write an RTF randomization report.                             |
+| `smr_write_csv()`  | Write a CSV randomization list.                                |
+
+# Usage
+
+## Two-arm 1:1 trial
+
+```{r}
+x <- smr_alloc(N = 48, arms = c("TestTrt", "Placebo"), seed = 84529052)
+print(x, n = 8)
+```
+
+The arm balance is exact (24 vs 24) and the block structure is stored in
+`$blocks`:
+
+```{r}
+x$balance
+x$blocks
+```
+
+## Unequal allocation ratio
+
+```{r}
+y <- smr_alloc(N = 150, arms = c("A", "A", "B", "B", "C"), seed = 123456)
+y$balance
+```
+
+The `arms` argument accepts a character vector (one token per ratio unit), a
+single blank-separated string, or a named ratio vector:
+
+```{r}
+z <- smr_alloc(N = 60, arms = c(TestTrt = 2, Placebo = 2, Control = 1), seed = 7)
+z$design[c("arms", "ratio", "ratio_sum")]
+```
+
+## Releasing the list (ICH E9 / GCP)
+
+```{r, eval = FALSE}
+x <- smr_alloc(N = 48, arms = c("TestTrt", "Placebo"), seed = 84529052,
+               keep.blocks = FALSE)
+names(x$alloc)             # "id" "arm" only -- no block information
+smr_write_csv(x, "randomization.csv")
+smr_rtf(x, "randomization.rtf")
+```
+
+## Multi-center (center-stratified) randomization
+
+In a multi-centre RCT the treatment groups must be balanced **within every
+centre**, not only overall, otherwise centre and arm become confounded. The
+standard remedy is **stratification by centre**: run `smr_alloc()` independently
+in each centre and combine the per-centre lists. Each centre may have its own
+sample size (and its own allocation ratio, if required). To keep the whole
+multi-centre schedule reproducible from a single number, derive one independent
+stream per centre with `smr_streams()` and hand one to each call.
+
+```{r}
+centers <- data.frame(
+  center = c("Site 01", "Site 02", "Site 03"),
+  n      = c(48, 36, 24)            # planned enrolment per centre
+)
+streams <- smr_streams(seed = 20260301, n = nrow(centers))
+
+## One independent SMR run per centre, then one merged list
+rand_list <- do.call(rbind, lapply(seq_len(nrow(centers)), function(i) {
+  x <- smr_alloc(N = centers$n[i], arms = c("TestTrt", "Placebo"),
+                 stream = streams[[i]])
+  cbind(center = centers$center[i], x$alloc)
+}))
+rand_list$subject <- seq_len(nrow(rand_list))   # global sequential id
+
+head(rand_list[, c("center", "subject", "id", "arm")], 10)
+```
+
+```{r}
+## Balance is exact within every centre (and therefore overall)
+with(rand_list, table(center, arm))
+```
+
+Each centre's block structure is still available in its own `smr_alloc()` object
+for quality control. The released list drops it and is written with
+`write.csv()`:
+
+```{r, eval = FALSE}
+release <- rand_list[, c("center", "subject", "id", "arm")]
+write.csv(release, "randomization_multicenter.csv", row.names = FALSE)
+```
+
+# Validation
+
+Every structural invariant promised by the scheme is checked by
+`smr_verify()`, and a randomized check of the design matrix is run by the test
+suite.
+
+```{r}
+v <- smr_verify(x)
+v
+all(v$status == "PASS")
+```
+
+The running imbalance starts at the head block's deliberate imbalance and
+returns to at most 1 by the end of the sequence:
+
+```{r, fig.width = 6, fig.height = 4}
+plot(x, type = "imbalance")
+```
+
+A design can be assessed by replication on the two key performance metrics of a
+randomization procedure — **allocation balance** (the absolute imbalance
+`E|D(i)|`, with `D(i) = n_A(i) - n_B(i)`) and **allocation unpredictability**
+(the Blackwell–Hodges proportion of correct guesses, PCG):
+
+```{r}
+s <- smr_simulate(N = 48, arms = c("A", "B"), reps = 1000, seed = 11)
+s
+```
+
+The per-step correct guesses and their mean are also available for a single
+sequence. Under the convergence strategy the next assignment is predicted to go
+to the arm with the fewer prior allocations (`0.5` on ties); a PCG close to
+`0.5` means the sequence is about as unpredictable as complete randomization:
+
+```{r}
+cg <- smr_correct_guesses(x)
+smr_pcg(x)            # proportion of correct guesses (0.5 = complete randomization)
+```
+
+
+# Reproducibility
+
+Every sequence is a deterministic function of a single seed. The seed actually
+used is stored and can be reused:
+
+```{r}
+x1 <- smr_alloc(N = 48, arms = c("A", "B"), seed = 2026)
+x2 <- smr_alloc(N = 48, arms = c("A", "B"), seed = 2026)
+identical(x1$alloc, x2$alloc)      # TRUE
+identical(smr_reproduce(x1)$alloc, x1$alloc)   # TRUE
+```
+
+For **high-frequency calling** (e.g. a simulation loop), `smr_streams()` derives
+a family of non-overlapping L'Ecuyer-CMRG sub-streams from one base seed; each
+call is handed one stream, so no two calls ever draw from the same random
+numbers, while the whole loop remains reproducible:
+
+```{r}
+ss <- smr_streams(seed = 42, n = 3)
+a <- smr_alloc(N = 48, arms = c("A", "B"), stream = ss[[1]])
+b <- smr_alloc(N = 48, arms = c("A", "B"), stream = ss[[2]])
+!identical(a$alloc, b$alloc)       # independent streams -> different sequences
+```
+
+A call to `smr_alloc()` never changes the random number state of the calling
+session.
+
+# Computational details
+
+* **Random streams.** The package uses the L'Ecuyer-CMRG generator, the only
+  generator for which `parallel::nextRNGStream()` guarantees non-overlapping
+  sub-streams (each about $2^{127}$ draws long). One call derives four module
+  sub-streams (selection of `n1`, Module I, Module II, Path 1), which are
+  therefore statistically independent. This mirrors and strengthens the
+  `CALL STREAMINIT` mechanism of the SAS macro.
+* **Shuffling.** Fisher--Yates with all uniforms drawn in a single `runif()`
+  call, identical to the naive loop but about an order of magnitude faster for
+  long vectors.
+* **Apportionment.** Blocks are filled by the largest-remainder rule with ties
+  broken at random, which is exactly proportional for a multiple of `ratio_sum`
+  and never more than one slot from the quota otherwise.
+* **Timing.** The generator is pure R; generating a sequence of length
+  $N = 2000$ takes a few milliseconds.
+
+# Summary
+
+`sandwichrand` provides an efficient, reproducible and auditable R implementation
+of the Sandwich Mixed Randomization scheme. It simultaneously guarantees
+overall allocation balance and allocation unpredictability, supports any number
+of arms and any allocation ratio, samples the head-block size at random, and
+uses a spread-based imbalance measure that is a natural generalization of the
+between-group difference used for 1:1 designs. The package is ready for use in
+clinical trials and for simulation studies that evaluate randomization
+procedures.

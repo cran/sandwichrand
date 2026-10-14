@@ -1,0 +1,31 @@
+Package: sandwichrand
+Type: Package
+Title: Sandwich Mixed Randomization for Allocation Sequence Generation
+Version: 1.0.0
+Authors@R: c(
+    person("Bingshun", "Wang", email = "wangbshun@foxmail.com",
+           role = c("aut", "cre"),
+           comment = "Designer of the sandwich mixed randomization scheme"),
+    person("Jinliang", "Xie", role = "ctb"),
+    person("Wei", "Wang", role = "ctb"))
+Description: Generates allocation sequences for randomized controlled trials
+    using the sandwich mixed randomization (SMR) scheme, together with
+    verification, diagnostics, and release utilities.
+License: Apache License (>= 2.0)
+Encoding: UTF-8
+URL: https://github.com/wangbshun/sandwichrand
+BugReports: https://github.com/wangbshun/sandwichrand/issues
+Depends: R (>= 3.6.0)
+Imports: graphics, parallel, stats, utils
+Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
+VignetteBuilder: knitr
+NeedsCompilation: no
+Config/roxygen2/version: 8.1.0
+Packaged: 2026-10-01 03:25:47 UTC; DELL
+Author: Bingshun Wang [aut, cre] (Designer of the sandwich mixed randomization
+    scheme),
+  Jinliang Xie [ctb],
+  Wei Wang [ctb]
+Maintainer: Bingshun Wang <wangbshun@foxmail.com>
+Repository: CRAN
+Date/Publication: 2026-10-14 15:40:09 UTC

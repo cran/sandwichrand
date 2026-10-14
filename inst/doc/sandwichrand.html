@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Bingshun Wang" />
+
+<meta name="date" content="2026-10-01" />
+
+<title>sandwichrand: Allocation Sequences by Sandwich Mixed Randomization</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">sandwichrand: Allocation Sequences by
+Sandwich Mixed Randomization</h1>
+<h4 class="author">Bingshun Wang</h4>
+<h4 class="date">2026-10-01</h4>
+
+
+<div id="TOC">
+<ul>
+<li><a href="#motivation" id="toc-motivation">Motivation</a></li>
+<li><a href="#methods" id="toc-methods">Methods</a>
+<ul>
+<li><a href="#module-i-the-two-complementary-unbalanced-blocks" id="toc-module-i-the-two-complementary-unbalanced-blocks">Module I: the
+two complementary unbalanced blocks</a></li>
+<li><a href="#module-ii-permuted-blocks-with-varying-block-sizes" id="toc-module-ii-permuted-blocks-with-varying-block-sizes">Module II:
+permuted blocks with varying block sizes</a></li>
+<li><a href="#boundary-paths" id="toc-boundary-paths">Boundary
+paths</a></li>
+</ul></li>
+<li><a href="#implementation" id="toc-implementation">Implementation</a></li>
+<li><a href="#usage" id="toc-usage">Usage</a>
+<ul>
+<li><a href="#two-arm-11-trial" id="toc-two-arm-11-trial">Two-arm 1:1
+trial</a></li>
+<li><a href="#unequal-allocation-ratio" id="toc-unequal-allocation-ratio">Unequal allocation ratio</a></li>
+<li><a href="#releasing-the-list-ich-e9-gcp" id="toc-releasing-the-list-ich-e9-gcp">Releasing the list (ICH E9 /
+GCP)</a></li>
+<li><a href="#multi-center-center-stratified-randomization" id="toc-multi-center-center-stratified-randomization">Multi-center
+(center-stratified) randomization</a></li>
+</ul></li>
+<li><a href="#validation" id="toc-validation">Validation</a></li>
+<li><a href="#reproducibility" id="toc-reproducibility">Reproducibility</a></li>
+<li><a href="#computational-details" id="toc-computational-details">Computational details</a></li>
+<li><a href="#summary" id="toc-summary">Summary</a></li>
+</ul>
+</div>
+
+<div id="motivation" class="section level1">
+<h1>Motivation</h1>
+<p>Randomization is the cornerstone of the randomized controlled trial
+(RCT). A randomization procedure must satisfy two competing objectives
+simultaneously: it must produce comparable treatment groups (allocation
+<strong>balance</strong>), and it must prevent anyone from guessing the
+next allocation (allocation <strong>unpredictability</strong>). The
+permuted block design (PBD), still the dominant procedure in practice,
+achieves near-perfect balance at the price of predictability: once an
+investigator infers the block structure, the final assignment inside a
+block becomes foreseeable.</p>
+<p>The <strong>Sandwich Mixed Randomization</strong> (SMR) scheme of
+Wang et al. (2026) resolves this tension. An SMR sequence is a
+“sandwich”:</p>
+<pre><code>|&lt;--- n1 ---&gt;|&lt;-------- N - 2*n1 --------&gt;|&lt;--- n1 ---&gt;|
++------------+----------------------------+------------+
+| block 1    | blocks 2 .. K              | block K+1  |
+| imbalanced | permuted blocks of         | complement |
+|            | varying sizes              | of block 1 |
++------------+----------------------------+------------+</code></pre>
+<p>The two end blocks are deliberately and controllably imbalanced, so
+that the first part of the sequence remains unpredictable; the middle
+part uses permuted blocks with varying block sizes; and the last block
+is the exact complement of the first, so that overall balance is
+guaranteed by construction. The <code>sandwichrand</code> package is an
+efficient, reproducible R implementation of this scheme.</p>
+</div>
+<div id="methods" class="section level1">
+<h1>Methods</h1>
+<div id="module-i-the-two-complementary-unbalanced-blocks" class="section level2">
+<h2>Module I: the two complementary unbalanced blocks</h2>
+<p>The head and tail blocks both have size <code>n1</code>. The size
+<code>n1</code> is a multiple of <code>ratio_sum</code> (the sum of the
+allocation-ratio units, e.g. 2 for 1:1, 5 for 2:2:1) and is sampled
+uniformly at random from the admissible values in
+<code>[2*ratio_sum, N/2]</code>, keeping at most 10 candidate values.
+This means the block structure is not fixed in advance and cannot be
+predicted.</p>
+<p>A pool of <code>2*n1</code> slots is built in exact proportion to the
+target allocation and shuffled by Fisher–Yates. The first
+<code>n1</code> slots form the head block and the remaining
+<code>n1</code> slots form the tail block, so the two are complementary
+and their union is exactly proportional. The shuffle is repeated
+(replacement randomization) until the head block’s imbalance is
+acceptable.</p>
+<p>The imbalance is measured by the <strong>spread</strong> of the
+deviations from the target allocation,</p>
+<pre><code>spread = max_g( count_g - n * mult_g / ratio_sum )
+       - min_g( count_g - n * mult_g / ratio_sum ).</code></pre>
+<p>For a 1:1 allocation this is exactly the difference between the two
+group sizes, i.e. the definition used in the paper; for unequal ratios
+it is the natural generalization (<code>spread = 0</code> means exactly
+proportional). The default admissible window is <code>[1, 4]</code>; 4
+is the “safety factor” discussed in the paper. The head block must be
+<em>strictly</em> imbalanced (<code>spread &gt;= 1</code>), otherwise
+the scheme would degenerate into a plain permuted-block design.</p>
+</div>
+<div id="module-ii-permuted-blocks-with-varying-block-sizes" class="section level2">
+<h2>Module II: permuted blocks with varying block sizes</h2>
+<p>The middle section holds <code>N - 2*n1</code> slots, split into
+blocks whose sizes are drawn at random from <code>2*ratio_sum</code>,
+<code>3*ratio_sum</code> and <code>4*ratio_sum</code> (the “doubled,
+tripled or quadrupled” sizes of the paper). At every step only feasible
+sizes are drawn, so no “crumb” block is created. Each block is filled in
+exact proportion to the target allocation (largest-remainder
+apportionment) and then shuffled.</p>
+</div>
+<div id="boundary-paths" class="section level2">
+<h2>Boundary paths</h2>
+<ul>
+<li><strong>Path 1</strong> — <code>N &lt; 4*ratio_sum</code>: the trial
+is too small for a sandwich, so a single block of size <code>N</code> is
+produced by complete randomization.</li>
+<li><strong>Path 3</strong> — <code>N == 2*n1</code>: head and tail
+blocks only, no middle section.</li>
+</ul>
+</div>
+</div>
+<div id="implementation" class="section level1">
+<h1>Implementation</h1>
+<p><code>sandwichrand</code> is a pure R package (no compiled code)
+depending only on base R and the <code>parallel</code>,
+<code>stats</code>, <code>graphics</code> and <code>utils</code>
+packages.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(sandwichrand)</span></code></pre></div>
+<p>The public interface is small and orthogonal:</p>
+<table>
+<colgroup>
+<col width="23%" />
+<col width="76%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Function</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>smr_alloc()</code></td>
+<td>Generate one allocation sequence.</td>
+</tr>
+<tr class="even">
+<td><code>smr_streams()</code></td>
+<td>Derive independent random streams for high-frequency calling.</td>
+</tr>
+<tr class="odd">
+<td><code>smr_reproduce()</code></td>
+<td>Regenerate a sequence from its stored specification.</td>
+</tr>
+<tr class="even">
+<td><code>smr_verify()</code></td>
+<td>Re-check every structural invariant.</td>
+</tr>
+<tr class="odd">
+<td><code>smr_balance()</code></td>
+<td>Arm counts and deviations from target.</td>
+</tr>
+<tr class="even">
+<td><code>smr_blocks()</code></td>
+<td>Block structure (the statistician’s copy).</td>
+</tr>
+<tr class="odd">
+<td><code>smr_imbalance()</code></td>
+<td>Running imbalance along the sequence.</td>
+</tr>
+<tr class="even">
+<td><code>smr_spread()</code></td>
+<td>Spread of deviations (the imbalance measure).</td>
+</tr>
+<tr class="odd">
+<td><code>smr_simulate()</code></td>
+<td>Assess a design by replication.</td>
+</tr>
+<tr class="even">
+<td><code>smr_rtf()</code></td>
+<td>Write an RTF randomization report.</td>
+</tr>
+<tr class="odd">
+<td><code>smr_write_csv()</code></td>
+<td>Write a CSV randomization list.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="usage" class="section level1">
+<h1>Usage</h1>
+<div id="two-arm-11-trial" class="section level2">
+<h2>Two-arm 1:1 trial</h2>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">smr_alloc</span>(<span class="at">N =</span> <span class="dv">48</span>, <span class="at">arms =</span> <span class="fu">c</span>(<span class="st">&quot;TestTrt&quot;</span>, <span class="st">&quot;Placebo&quot;</span>), <span class="at">seed =</span> <span class="dv">84529052</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">print</span>(x, <span class="at">n =</span> <span class="dv">8</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; SMR allocation sequence (sandwich mixed randomization)</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt;   N             = 48</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt;   arms          = TestTrt : Placebo   (ratio 1:1, ratio_sum = 2, 2 arms)</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt;   layout        = 6 + 6 x 4/6/8 + 6   (path 2)</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt;   first block   = n1 = 6, imbalance 2 (target [1, 4])</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt;   middle        = 6 block(s), 36 slots, candidate sizes 4 6 8</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt;   seed          = 84529052   (The seed was specified by the user.)</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;   block columns = kept</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; Allocation list (first 8 of 48 rows)</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt;  id block block_size     arm</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt;   1     1          6 TestTrt</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt;   2     1          6 TestTrt</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt;   3     1          6 TestTrt</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt;   4     1          6 Placebo</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt;   5     1          6 Placebo</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt;   6     1          6 TestTrt</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt;   7     2          8 TestTrt</span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt;   8     2          8 TestTrt</span></span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a><span class="co">#&gt; Arm balance</span></span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a><span class="co">#&gt;      arm  n expected deviation</span></span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a><span class="co">#&gt;  TestTrt 24       24         0</span></span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a><span class="co">#&gt;  Placebo 24       24         0</span></span></code></pre></div>
+<p>The arm balance is exact (24 vs 24) and the block structure is stored
+in <code>$blocks</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>x<span class="sc">$</span>balance</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt;       arm  n expected deviation</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; 1 TestTrt 24       24         0</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; 2 Placebo 24       24         0</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>x<span class="sc">$</span>blocks</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt;   block size first_id last_id n_Placebo n_TestTrt</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; 1     1    6        1       6         2         4</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; 2     2    8        7      14         4         4</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; 3     3    8       15      22         4         4</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; 4     4    6       23      28         3         3</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; 5     5    4       29      32         2         2</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt; 6     6    4       33      36         2         2</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt; 7     7    6       37      42         3         3</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; 8     8    6       43      48         4         2</span></span></code></pre></div>
+</div>
+<div id="unequal-allocation-ratio" class="section level2">
+<h2>Unequal allocation ratio</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">smr_alloc</span>(<span class="at">N =</span> <span class="dv">150</span>, <span class="at">arms =</span> <span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>), <span class="at">seed =</span> <span class="dv">123456</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>y<span class="sc">$</span>balance</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt;   arm  n expected deviation</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt; 1   A 60       60         0</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; 2   B 60       60         0</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; 3   C 30       30         0</span></span></code></pre></div>
+<p>The <code>arms</code> argument accepts a character vector (one token
+per ratio unit), a single blank-separated string, or a named ratio
+vector:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>z <span class="ot">&lt;-</span> <span class="fu">smr_alloc</span>(<span class="at">N =</span> <span class="dv">60</span>, <span class="at">arms =</span> <span class="fu">c</span>(<span class="at">TestTrt =</span> <span class="dv">2</span>, <span class="at">Placebo =</span> <span class="dv">2</span>, <span class="at">Control =</span> <span class="dv">1</span>), <span class="at">seed =</span> <span class="dv">7</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>z<span class="sc">$</span>design[<span class="fu">c</span>(<span class="st">&quot;arms&quot;</span>, <span class="st">&quot;ratio&quot;</span>, <span class="st">&quot;ratio_sum&quot;</span>)]</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; $arms</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; [1] &quot;TestTrt&quot; &quot;Placebo&quot; &quot;Control&quot;</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; $ratio</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; [1] &quot;2:2:1&quot;</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; $ratio_sum</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt; [1] 5</span></span></code></pre></div>
+</div>
+<div id="releasing-the-list-ich-e9-gcp" class="section level2">
+<h2>Releasing the list (ICH E9 / GCP)</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">smr_alloc</span>(<span class="at">N =</span> <span class="dv">48</span>, <span class="at">arms =</span> <span class="fu">c</span>(<span class="st">&quot;TestTrt&quot;</span>, <span class="st">&quot;Placebo&quot;</span>), <span class="at">seed =</span> <span class="dv">84529052</span>,</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>               <span class="at">keep.blocks =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="fu">names</span>(x<span class="sc">$</span>alloc)             <span class="co"># &quot;id&quot; &quot;arm&quot; only -- no block information</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="fu">smr_write_csv</span>(x, <span class="st">&quot;randomization.csv&quot;</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="fu">smr_rtf</span>(x, <span class="st">&quot;randomization.rtf&quot;</span>)</span></code></pre></div>
+</div>
+<div id="multi-center-center-stratified-randomization" class="section level2">
+<h2>Multi-center (center-stratified) randomization</h2>
+<p>In a multi-centre RCT the treatment groups must be balanced
+<strong>within every centre</strong>, not only overall, otherwise centre
+and arm become confounded. The standard remedy is <strong>stratification
+by centre</strong>: run <code>smr_alloc()</code> independently in each
+centre and combine the per-centre lists. Each centre may have its own
+sample size (and its own allocation ratio, if required). To keep the
+whole multi-centre schedule reproducible from a single number, derive
+one independent stream per centre with <code>smr_streams()</code> and
+hand one to each call.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>centers <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="at">center =</span> <span class="fu">c</span>(<span class="st">&quot;Site 01&quot;</span>, <span class="st">&quot;Site 02&quot;</span>, <span class="st">&quot;Site 03&quot;</span>),</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="at">n      =</span> <span class="fu">c</span>(<span class="dv">48</span>, <span class="dv">36</span>, <span class="dv">24</span>)            <span class="co"># planned enrolment per centre</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>)</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>streams <span class="ot">&lt;-</span> <span class="fu">smr_streams</span>(<span class="at">seed =</span> <span class="dv">20260301</span>, <span class="at">n =</span> <span class="fu">nrow</span>(centers))</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="do">## One independent SMR run per centre, then one merged list</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>rand_list <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(centers)), <span class="cf">function</span>(i) {</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">smr_alloc</span>(<span class="at">N =</span> centers<span class="sc">$</span>n[i], <span class="at">arms =</span> <span class="fu">c</span>(<span class="st">&quot;TestTrt&quot;</span>, <span class="st">&quot;Placebo&quot;</span>),</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>                 <span class="at">stream =</span> streams[[i]])</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>  <span class="fu">cbind</span>(<span class="at">center =</span> centers<span class="sc">$</span>center[i], x<span class="sc">$</span>alloc)</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>}))</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>rand_list<span class="sc">$</span>subject <span class="ot">&lt;-</span> <span class="fu">seq_len</span>(<span class="fu">nrow</span>(rand_list))   <span class="co"># global sequential id</span></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a><span class="fu">head</span>(rand_list[, <span class="fu">c</span>(<span class="st">&quot;center&quot;</span>, <span class="st">&quot;subject&quot;</span>, <span class="st">&quot;id&quot;</span>, <span class="st">&quot;arm&quot;</span>)], <span class="dv">10</span>)</span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a><span class="co">#&gt;     center subject id     arm</span></span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a><span class="co">#&gt; 1  Site 01       1  1 TestTrt</span></span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a><span class="co">#&gt; 2  Site 01       2  2 Placebo</span></span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a><span class="co">#&gt; 3  Site 01       3  3 Placebo</span></span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a><span class="co">#&gt; 4  Site 01       4  4 TestTrt</span></span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a><span class="co">#&gt; 5  Site 01       5  5 Placebo</span></span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a><span class="co">#&gt; 6  Site 01       6  6 Placebo</span></span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a><span class="co">#&gt; 7  Site 01       7  7 Placebo</span></span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a><span class="co">#&gt; 8  Site 01       8  8 Placebo</span></span>
+<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a><span class="co">#&gt; 9  Site 01       9  9 TestTrt</span></span>
+<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a><span class="co">#&gt; 10 Site 01      10 10 TestTrt</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="do">## Balance is exact within every centre (and therefore overall)</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="fu">with</span>(rand_list, <span class="fu">table</span>(center, arm))</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="co">#&gt;          arm</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co">#&gt; center    Placebo TestTrt</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt;   Site 01      24      24</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt;   Site 02      18      18</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co">#&gt;   Site 03      12      12</span></span></code></pre></div>
+<p>Each centre’s block structure is still available in its own
+<code>smr_alloc()</code> object for quality control. The released list
+drops it and is written with <code>write.csv()</code>:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>release <span class="ot">&lt;-</span> rand_list[, <span class="fu">c</span>(<span class="st">&quot;center&quot;</span>, <span class="st">&quot;subject&quot;</span>, <span class="st">&quot;id&quot;</span>, <span class="st">&quot;arm&quot;</span>)]</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="fu">write.csv</span>(release, <span class="st">&quot;randomization_multicenter.csv&quot;</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+</div>
+</div>
+<div id="validation" class="section level1">
+<h1>Validation</h1>
+<p>Every structural invariant promised by the scheme is checked by
+<code>smr_verify()</code>, and a randomized check of the design matrix
+is run by the test suite.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">smr_verify</span>(x)</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>v</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co">#&gt; SMR verification report</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co">#&gt;   [PASS] rows : rows = 48, expected 48</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co">#&gt;   [PASS] arms_complete : unknown or missing arm values = 0</span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co">#&gt;   [PASS] ids : distinct ids = 48, range [1, 48], expected 48</span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="co">#&gt;   [PASS] balance : max |deviation| = 0</span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co">#&gt;   [PASS] seed_or_stream : seed = 84529052, stream_used = FALSE</span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt;   [PASS] blocks_sum : sum of block sizes = 48, expected 48</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt;   [PASS] blocks_contiguous : blocks cover ids 1..48 contiguously</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt;   [PASS] n1_equal : head block size = 6, tail block size = 6</span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="co">#&gt;   [PASS] n1_min : head block size = 6, minimum = 4</span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co">#&gt;   [PASS] complementarity : combined head+tail deviation from target = [0.000, 0.000]</span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="fu">all</span>(v<span class="sc">$</span>status <span class="sc">==</span> <span class="st">&quot;PASS&quot;</span>)</span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>The running imbalance starts at the head block’s deliberate imbalance
+and returns to at most 1 by the end of the sequence:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">plot</span>(x, <span class="at">type =</span> <span class="st">&quot;imbalance&quot;</span>)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>A design can be assessed by replication on the two key performance
+metrics of a randomization procedure — <strong>allocation
+balance</strong> (the absolute imbalance <code>E|D(i)|</code>, with
+<code>D(i) = n_A(i) - n_B(i)</code>) and <strong>allocation
+unpredictability</strong> (the Blackwell–Hodges proportion of correct
+guesses, PCG):</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>s <span class="ot">&lt;-</span> <span class="fu">smr_simulate</span>(<span class="at">N =</span> <span class="dv">48</span>, <span class="at">arms =</span> <span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>), <span class="at">reps =</span> <span class="dv">1000</span>, <span class="at">seed =</span> <span class="dv">11</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>s</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a><span class="co">#&gt; SMR design assessment by simulation</span></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a><span class="co">#&gt;   replications        = 1000</span></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a><span class="co">#&gt;   final imbalance     : mean 0, median 0, max 0, P(|imb| &lt;= 1) 1</span></span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a><span class="co">#&gt;   maximum imbalance   : mean 4.793, median 5, 95% quantile 7</span></span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a><span class="co">#&gt;   correct-guess PCG   : mean 0.5601146, median 0.5625, min 0.5104167, max 0.6666667</span></span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a><span class="co">#&gt;   first block size n1 : 4 .. 22</span></span></code></pre></div>
+<p>The per-step correct guesses and their mean are also available for a
+single sequence. Under the convergence strategy the next assignment is
+predicted to go to the arm with the fewer prior allocations
+(<code>0.5</code> on ties); a PCG close to <code>0.5</code> means the
+sequence is about as unpredictable as complete randomization:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>cg <span class="ot">&lt;-</span> <span class="fu">smr_correct_guesses</span>(x)</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="fu">smr_pcg</span>(x)            <span class="co"># proportion of correct guesses (0.5 = complete randomization)</span></span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="co">#&gt; [1] 0.5208333</span></span></code></pre></div>
+</div>
+<div id="reproducibility" class="section level1">
+<h1>Reproducibility</h1>
+<p>Every sequence is a deterministic function of a single seed. The seed
+actually used is stored and can be reused:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>x1 <span class="ot">&lt;-</span> <span class="fu">smr_alloc</span>(<span class="at">N =</span> <span class="dv">48</span>, <span class="at">arms =</span> <span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>), <span class="at">seed =</span> <span class="dv">2026</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>x2 <span class="ot">&lt;-</span> <span class="fu">smr_alloc</span>(<span class="at">N =</span> <span class="dv">48</span>, <span class="at">arms =</span> <span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>), <span class="at">seed =</span> <span class="dv">2026</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="fu">identical</span>(x1<span class="sc">$</span>alloc, x2<span class="sc">$</span>alloc)      <span class="co"># TRUE</span></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a><span class="fu">identical</span>(<span class="fu">smr_reproduce</span>(x1)<span class="sc">$</span>alloc, x1<span class="sc">$</span>alloc)   <span class="co"># TRUE</span></span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>For <strong>high-frequency calling</strong> (e.g. a simulation loop),
+<code>smr_streams()</code> derives a family of non-overlapping
+L’Ecuyer-CMRG sub-streams from one base seed; each call is handed one
+stream, so no two calls ever draw from the same random numbers, while
+the whole loop remains reproducible:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>ss <span class="ot">&lt;-</span> <span class="fu">smr_streams</span>(<span class="at">seed =</span> <span class="dv">42</span>, <span class="at">n =</span> <span class="dv">3</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>a <span class="ot">&lt;-</span> <span class="fu">smr_alloc</span>(<span class="at">N =</span> <span class="dv">48</span>, <span class="at">arms =</span> <span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>), <span class="at">stream =</span> ss[[<span class="dv">1</span>]])</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>b <span class="ot">&lt;-</span> <span class="fu">smr_alloc</span>(<span class="at">N =</span> <span class="dv">48</span>, <span class="at">arms =</span> <span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>), <span class="at">stream =</span> ss[[<span class="dv">2</span>]])</span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="sc">!</span><span class="fu">identical</span>(a<span class="sc">$</span>alloc, b<span class="sc">$</span>alloc)       <span class="co"># independent streams -&gt; different sequences</span></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>A call to <code>smr_alloc()</code> never changes the random number
+state of the calling session.</p>
+</div>
+<div id="computational-details" class="section level1">
+<h1>Computational details</h1>
+<ul>
+<li><strong>Random streams.</strong> The package uses the L’Ecuyer-CMRG
+generator, the only generator for which
+<code>parallel::nextRNGStream()</code> guarantees non-overlapping
+sub-streams (each about <span class="math inline">\(2^{127}\)</span>
+draws long). One call derives four module sub-streams (selection of
+<code>n1</code>, Module I, Module II, Path 1), which are therefore
+statistically independent. This mirrors and strengthens the
+<code>CALL STREAMINIT</code> mechanism of the SAS macro.</li>
+<li><strong>Shuffling.</strong> Fisher–Yates with all uniforms drawn in
+a single <code>runif()</code> call, identical to the naive loop but
+about an order of magnitude faster for long vectors.</li>
+<li><strong>Apportionment.</strong> Blocks are filled by the
+largest-remainder rule with ties broken at random, which is exactly
+proportional for a multiple of <code>ratio_sum</code> and never more
+than one slot from the quota otherwise.</li>
+<li><strong>Timing.</strong> The generator is pure R; generating a
+sequence of length <span class="math inline">\(N = 2000\)</span> takes a
+few milliseconds.</li>
+</ul>
+</div>
+<div id="summary" class="section level1">
+<h1>Summary</h1>
+<p><code>sandwichrand</code> provides an efficient, reproducible and
+auditable R implementation of the Sandwich Mixed Randomization scheme.
+It simultaneously guarantees overall allocation balance and allocation
+unpredictability, supports any number of arms and any allocation ratio,
+samples the head-block size at random, and uses a spread-based imbalance
+measure that is a natural generalization of the between-group difference
+used for 1:1 designs. The package is ready for use in clinical trials
+and for simulation studies that evaluate randomization procedures.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
